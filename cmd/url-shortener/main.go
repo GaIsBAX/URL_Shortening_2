@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"url-shortener/internal/config"
+	"url-shortener/internal/http-server/handlers/redirect"
 	"url-shortener/internal/http-server/handlers/url/save"
 	"url-shortener/internal/lib/logger/sl"
 
@@ -53,7 +54,6 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
-	// r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.URLFormat)
@@ -61,6 +61,10 @@ func main() {
 	//middleware
 
 	r.Post("/url", save.New(log, storage))
+	r.Get("/{alias}", redirect.New(log, storage))
+
+	// TODO: Create r.delete
+	// r.Delete("/url/{alias}", delete.New(log,storage))
 
 	log.Info("starting server", slog.String("addr", cfg.Address))
 	srv := &http.Server{
