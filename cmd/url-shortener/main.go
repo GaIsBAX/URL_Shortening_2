@@ -35,6 +35,7 @@ func main() {
 	log.Debug("debug message are enabled")
 
 	// TODO: init storage: sqlite
+	// storage, err := sqlite.New(cfg.StoragePath)
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
@@ -60,7 +61,15 @@ func main() {
 
 	//middleware
 
-	r.Post("/url", save.New(log, storage))
+	r.Route("/url", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+			cfg.HTTPServer.User: cfg.HTTPServer.Password,
+		}))
+
+		r.Post("/", save.New(log, storage))
+		//TODO: add DELETE /url/{id}
+	})
+
 	r.Get("/{alias}", redirect.New(log, storage))
 
 	// TODO: Create r.delete
